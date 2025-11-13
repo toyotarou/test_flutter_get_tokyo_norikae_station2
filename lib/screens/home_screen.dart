@@ -19,8 +19,8 @@ class _HomeScreenState extends State<HomeScreen> {
   late List<TokyoTrainModel> tokyoTrainModelList;
   late List<String> stationNamesList;
 
-  final TextEditingController fromEditingController = TextEditingController();
-  final TextEditingController toEditingController = TextEditingController();
+  final TextEditingController startEditingController = TextEditingController();
+  final TextEditingController goalEditingController = TextEditingController();
 
   bool _allowJR = true;
 
@@ -34,7 +34,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
     tokyoTrainModelList = widget.tokyoTrainModelList;
     stationNamesList = <String>{
-      for (final TokyoTrainModel ln in tokyoTrainModelList) ...ln.station.map((TokyoStationModel s) => s.stationName),
+      for (final TokyoTrainModel tokyoTrainModel in tokyoTrainModelList)
+        ...tokyoTrainModel.station.map((TokyoStationModel tokyoStationModel) => tokyoStationModel.stationName),
     }.toList()..sort();
   }
 
@@ -45,25 +46,25 @@ class _HomeScreenState extends State<HomeScreen> {
       calculateRouteModel = null;
     });
 
-    final String from = fromEditingController.text.trim();
-    final String to = toEditingController.text.trim();
-    if (from.isEmpty || to.isEmpty) {
+    final String start = startEditingController.text.trim();
+    final String goal = goalEditingController.text.trim();
+    if (start.isEmpty || goal.isEmpty) {
       setState(() => error = '出発駅と到着駅を入力してください');
       return;
     }
 
-    final CalculatedRouteModel? r = routeFinder(
-      allLines: tokyoTrainModelList,
-      origin: from,
-      destination: to,
+    final CalculatedRouteModel? calculatedRouteModel = routeFinder(
+      tokyoTrainModelList: tokyoTrainModelList,
+      origin: start,
+      destination: goal,
       allowJR: _allowJR,
     );
 
-    if (r == null) {
+    if (calculatedRouteModel == null) {
       final String jrMsg = _allowJR ? '' : '（JR除外中のため経路が無い可能性があります）';
       setState(() => error = '経路が見つかりませんでした $jrMsg');
     } else {
-      setState(() => calculateRouteModel = r);
+      setState(() => calculateRouteModel = calculatedRouteModel);
     }
   }
 
@@ -81,16 +82,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 Expanded(
                   child: stationNameAutoComplete(
                     label: '出発駅',
-                    textEditingController: fromEditingController,
-                    stationNamesList: this.stationNamesList,
+                    textEditingController: startEditingController,
+                    stationNamesList: stationNamesList,
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: stationNameAutoComplete(
                     label: '到着駅',
-                    textEditingController: toEditingController,
-                    stationNamesList: this.stationNamesList,
+                    textEditingController: goalEditingController,
+                    stationNamesList: stationNamesList,
                   ),
                 ),
               ],
@@ -107,7 +108,7 @@ class _HomeScreenState extends State<HomeScreen> {
             FilledButton.icon(icon: const Icon(Icons.search), label: const Text('検索する'), onPressed: norikaeSearch),
             const SizedBox(height: 12),
             if (error != null) Text(error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
-            if (this.calculateRouteModel != null) buildResultCard(calculateRouteModel: this.calculateRouteModel!),
+            if (calculateRouteModel != null) buildResultCard(calculateRouteModel: calculateRouteModel!),
           ],
         ),
       ),

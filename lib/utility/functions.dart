@@ -33,9 +33,9 @@ bool _isJRLine({required String lineName}) {
 ///
 /// という3種類のインデックスを持っている。
 class NetworkIndex {
-  NetworkIndex(this.lines) {
+  NetworkIndex(this.tokyoTrainModelList) {
     // 1) 各路線ごとに、駅のインデックス情報を構築
-    for (final TokyoTrainModel line in lines) {
+    for (final TokyoTrainModel line in tokyoTrainModelList) {
       final Map<String, int> idxMap = <String, int>{};
 
       for (int i = 0; i < line.station.length; i++) {
@@ -54,11 +54,11 @@ class NetworkIndex {
 
     // 2) 路線同士の「乗り換え可能関係」のグラフを構築
     //    ＝ 共通駅を持つ路線同士を隣接とみなし、その共通駅名の集合を持たせる
-    for (final TokyoTrainModel a in lines) {
+    for (final TokyoTrainModel a in tokyoTrainModelList) {
       // 路線aに含まれる駅名(正規化)のセット
       final Set<String> aSet = a.station.map((TokyoStationModel s) => stringModifier(name: s.stationName)).toSet();
 
-      for (final TokyoTrainModel b in lines) {
+      for (final TokyoTrainModel b in tokyoTrainModelList) {
         if (identical(a, b)) {
           continue; // 同一路線同士はスキップ
         }
@@ -83,7 +83,7 @@ class NetworkIndex {
   }
 
   /// このインデックスが対象としている路線一覧
-  final List<TokyoTrainModel> lines;
+  final List<TokyoTrainModel> tokyoTrainModelList;
 
   /// 駅名(正規化) → その駅が存在する (路線名, 路線内インデックス) のセット
   /// 例: "四ツ谷" → { ("JR中央線", 5), ("東京メトロ丸ノ内線", 3), ... }
@@ -226,15 +226,15 @@ String pickSharedStation({
 /// - 見つかった場合 : CalculatedRouteModel（経路全体＋乗り換え情報）
 /// - 見つからない場合: null
 CalculatedRouteModel? routeFinder({
-  required List<TokyoTrainModel> allLines,
+  required List<TokyoTrainModel> tokyoTrainModelList,
   required String origin,
   required String destination,
   required bool allowJR,
 }) {
   // 1) JR 利用可否に応じて路線一覧をフィルタリング
   final List<TokyoTrainModel> lines = allowJR
-      ? allLines
-      : allLines.where((TokyoTrainModel l) => !_isJRLine(lineName: l.trainName)).toList();
+      ? tokyoTrainModelList
+      : tokyoTrainModelList.where((TokyoTrainModel l) => !_isJRLine(lineName: l.trainName)).toList();
 
   // 2) インデックス構築
   final NetworkIndex idx = NetworkIndex(lines);
@@ -290,7 +290,7 @@ CalculatedRouteModel? routeFinder({
       final TokyoTrainModel nextL = lines.firstWhere((TokyoTrainModel l) => l.trainName == nextLine);
 
       // lineName → nextLine の間で、どの共通駅で乗り換えるかを決める
-      final String transAt = pickSharedStation(idx: idx, lineA: lineName, lineB: nextLine, nearA: cur, nearB: null);
+      final String transAt = pickSharedStation(idx: idx, lineA: lineName, lineB: nextLine, nearA: cur);
 
       // 「今の路線(lineName)上での乗換駅のインデックス」を取得
       final int tIdxA = idx.lineToStationIndex[lineName]![stringModifier(name: transAt)]!;
