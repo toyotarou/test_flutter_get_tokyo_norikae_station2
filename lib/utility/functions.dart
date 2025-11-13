@@ -8,8 +8,8 @@ import '../models/transfer_step_model.dart';
 /// - 前後のスペースを削除
 /// - 小文字化
 /// して、「駅名の表記ゆれ」をできるだけ吸収している。
-String _norm(String s) {
-  return s.replaceAll('　', ' ').trim().toLowerCase();
+String stringModifier({required String name}) {
+  return name.replaceAll('　', ' ').trim().toLowerCase();
 }
 
 /// 路線名が JR 系かどうかを判定する関数。
@@ -20,7 +20,7 @@ String _norm(String s) {
 /// ここで true になった路線は、allowJR=false のときに除外される。
 bool _isJRLine({required String lineName}) {
   // ざっくり全角→半角に寄せて "jr" を検出する
-  final String n = _norm(lineName).replaceAll(' ', '').replaceAll('jr', 'jr').replaceAll('ｊｒ', 'jr');
+  final String n = stringModifier(name: lineName).replaceAll(' ', '').replaceAll('jr', 'jr').replaceAll('ｊｒ', 'jr');
   return n.contains('jr');
 }
 
@@ -39,7 +39,7 @@ class NetworkIndex {
       final Map<String, int> idxMap = <String, int>{};
 
       for (int i = 0; i < line.station.length; i++) {
-        final String norm = _norm(line.station[i].stationName);
+        final String norm = stringModifier(name: line.station[i].stationName);
 
         // 路線内インデックスを保存
         idxMap[norm] = i;
@@ -56,7 +56,7 @@ class NetworkIndex {
     //    ＝ 共通駅を持つ路線同士を隣接とみなし、その共通駅名の集合を持たせる
     for (final TokyoTrainModel a in lines) {
       // 路線aに含まれる駅名(正規化)のセット
-      final Set<String> aSet = a.station.map((TokyoStationModel s) => _norm(s.stationName)).toSet();
+      final Set<String> aSet = a.station.map((TokyoStationModel s) => stringModifier(name: s.stationName)).toSet();
 
       for (final TokyoTrainModel b in lines) {
         if (identical(a, b)) {
@@ -68,7 +68,7 @@ class NetworkIndex {
         // 路線bの各駅が路線aにも存在するかどうかチェックし、
         // 共通している駅名を shared に追加
         for (final TokyoStationModel st in b.station) {
-          if (aSet.contains(_norm(st.stationName))) {
+          if (aSet.contains(stringModifier(name: st.stationName))) {
             shared.add(st.stationName);
           }
         }
@@ -102,7 +102,7 @@ class NetworkIndex {
   ///
   /// 例: "四ツ谷" → { ("JR中央線", 10), ("東京メトロ丸ノ内線", 5), ... }
   Set<(String lineName, int idx)> candidateLinesByStation({required String name}) =>
-      stationToLineAndIdx[_norm(name)] ?? <(String, int)>{};
+      stationToLineAndIdx[stringModifier(name: name)] ?? <(String, int)>{};
 }
 
 /// 路線グラフに対して BFS（幅優先探索）を行い、
@@ -196,7 +196,7 @@ String pickSharedStation({
   int bestScore = 1 << 30; // 十分大きい数で初期化
 
   for (final String s in shared) {
-    final String n = _norm(s);
+    final String n = stringModifier(name: s);
 
     // lineA / lineB の中でのインデックス
     final int ai = idx.lineToStationIndex[lineA]![n]!;
@@ -293,7 +293,7 @@ CalculatedRouteModel? routeFinder({
       final String transAt = pickSharedStation(idx: idx, lineA: lineName, lineB: nextLine, nearA: cur, nearB: null);
 
       // 「今の路線(lineName)上での乗換駅のインデックス」を取得
-      final int tIdxA = idx.lineToStationIndex[lineName]![_norm(transAt)]!;
+      final int tIdxA = idx.lineToStationIndex[lineName]![stringModifier(name: transAt)]!;
 
       // 出発側の区間: 現在位置(cur) から 乗換駅(transAt) までの駅リスト
       final List<String> passA = sliceStations(list: line.station, a: cur!.$2, b: tIdxA);
@@ -306,7 +306,7 @@ CalculatedRouteModel? routeFinder({
       trans.add(TransferStepModel(atStation: transAt, fromLine: lineName, toLine: nextLine));
 
       // 次の路線(nextLine)上での「乗換駅のインデックス」へ位置を移動
-      final int tIdxB = idx.lineToStationIndex[nextLine]![_norm(transAt)]!;
+      final int tIdxB = idx.lineToStationIndex[nextLine]![stringModifier(name: transAt)]!;
       cur = (nextLine, tIdxB);
 
       // ■ linePath の最後の路線に乗り換えた直後なら、
