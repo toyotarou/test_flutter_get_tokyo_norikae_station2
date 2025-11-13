@@ -12,17 +12,21 @@ String stringModifier({required String name}) {
   return name.replaceAll('　', ' ').trim().toLowerCase();
 }
 
+//====================================================================================
+
 /// 路線名が JR 系かどうかを判定する関数。
 /// - normalize した文字列からスペースを除去
 /// - "ｊｒ" も "jr" とみなす簡易変換
 /// - "jr" を含んでいたら JR とみなす
 ///
 /// ここで true になった路線は、allowJR=false のときに除外される。
-bool _isJRLine({required String lineName}) {
+bool checkTrainNameIncludeJR({required String trainName}) {
   // ざっくり全角→半角に寄せて "jr" を検出する
-  final String n = stringModifier(name: lineName).replaceAll(' ', '').replaceAll('jr', 'jr').replaceAll('ｊｒ', 'jr');
+  final String n = stringModifier(name: trainName).replaceAll(' ', '').replaceAll('jr', 'jr').replaceAll('ｊｒ', 'jr');
   return n.contains('jr');
 }
+
+//====================================================================================
 
 /// 路線・駅の検索を高速化するためのインデックスクラス。
 ///
@@ -36,20 +40,20 @@ class NetworkIndex {
   NetworkIndex(this.tokyoTrainModelList) {
     // 1) 各路線ごとに、駅のインデックス情報を構築
     for (final TokyoTrainModel line in tokyoTrainModelList) {
-      final Map<String, int> idxMap = <String, int>{};
+      final Map<String, int> indexMap = <String, int>{};
 
       for (int i = 0; i < line.station.length; i++) {
         final String norm = stringModifier(name: line.station[i].stationName);
 
         // 路線内インデックスを保存
-        idxMap[norm] = i;
+        indexMap[norm] = i;
 
         // 駅名(正規化) → (路線名, インデックス) のセットを構築
         stationToLineAndIdx.putIfAbsent(norm, () => <(String, int)>{}).add((line.trainName, i));
       }
 
       // 路線名 → (駅名(正規化) → インデックス) のマップを保存
-      lineToStationIndex[line.trainName] = idxMap;
+      lineToStationIndex[line.trainName] = indexMap;
     }
 
     // 2) 路線同士の「乗り換え可能関係」のグラフを構築
@@ -105,6 +109,8 @@ class NetworkIndex {
       stationToLineAndIdx[stringModifier(name: name)] ?? <(String, int)>{};
 }
 
+//====================================================================================
+
 /// 路線グラフに対して BFS（幅優先探索）を行い、
 /// 「スタート路線集合 → ゴール路線集合」までの **最小乗り換え数** の路線パスを求める。
 ///
@@ -112,7 +118,7 @@ class NetworkIndex {
 /// - goal:  到着駅が属している路線たち
 /// 戻り値:
 /// - 例: ["東京メトロ南北線", "東京メトロ丸ノ内線"] のような路線名リスト
-List<String>? bfsLines({required NetworkIndex idx, required Set<String> start, required Set<String> goal}) {
+List<String>? bfsLines({required NetworkIndex networkIndex, required Set<String> start, required Set<String> goal}) {
   // もし「スタートの時点でゴール路線に含まれている」なら、乗り換え0本で OK
   if (start.any(goal.contains)) {
     return <String>[start.firstWhere(goal.contains)];
@@ -132,7 +138,7 @@ List<String>? bfsLines({required NetworkIndex idx, required Set<String> start, r
 
   while (queue.isNotEmpty) {
     final String u = queue.removeAt(0); // 先頭を取り出し
-    final Map<String, Set<String>> neigh = idx.lineGraph[u] ?? <String, Set<String>>{};
+    final Map<String, Set<String>> neigh = networkIndex.lineGraph[u] ?? <String, Set<String>>{};
 
     // u から乗り換え可能な隣接路線 v を1本ずつ見る
     for (final String v in neigh.keys) {
@@ -163,6 +169,8 @@ List<String>? bfsLines({required NetworkIndex idx, required Set<String> start, r
   return null;
 }
 
+//====================================================================================
+
 /// 路線内での駅リストの切り出し。
 /// fromIndex と toIndex の間の駅を順番にリストとして返す。
 ///
@@ -170,10 +178,17 @@ List<String>? bfsLines({required NetworkIndex idx, required Set<String> start, r
 /// - a >  b の場合 : [a, a-1, ..., b]（駅の順も反転して返す）
 List<String> sliceStations({required List<TokyoStationModel> list, required int a, required int b}) {
   if (a <= b) {
-    return list.sublist(a, b + 1).map((TokyoStationModel s) => s.stationName).toList();
+    return list.sublist(a, b + 1).map((TokyoStationModel tokyoStationModel) => tokyoStationModel.stationName).toList();
   }
-  return list.sublist(b, a + 1).reversed.map((TokyoStationModel s) => s.stationName).toList();
+
+  return list
+      .sublist(b, a + 1)
+      .reversed
+      .map((TokyoStationModel tokyoStationModel) => tokyoStationModel.stationName)
+      .toList();
 }
+
+//====================================================================================
 
 /// 2つの路線 lineA / lineB の間で「共通駅」が複数あるときに、
 /// どの駅で乗り換えるのが「都合が良さそうか」を評価して1つ選ぶ関数。
@@ -182,14 +197,14 @@ List<String> sliceStations({required List<TokyoStationModel> list, required int 
 /// そこからの距離（インデックス差）をスコアとして、
 /// 合計距離が最小となる駅を best として返す。
 String pickSharedStation({
-  required NetworkIndex idx,
+  required NetworkIndex networkIndex,
   required String lineA,
   required String lineB,
   (String, int)? nearA,
   (String, int)? nearB,
 }) {
   // lineA と lineB の共通駅の集合
-  final Set<String> shared = idx.lineGraph[lineA]![lineB]!;
+  final Set<String> shared = networkIndex.lineGraph[lineA]![lineB]!;
 
   // 探索用のベスト候補
   String best = shared.first;
@@ -199,8 +214,8 @@ String pickSharedStation({
     final String n = stringModifier(name: s);
 
     // lineA / lineB の中でのインデックス
-    final int ai = idx.lineToStationIndex[lineA]![n]!;
-    final int bi = idx.lineToStationIndex[lineB]![n]!;
+    final int ai = networkIndex.lineToStationIndex[lineA]![n]!;
+    final int bi = networkIndex.lineToStationIndex[lineB]![n]!;
 
     // nearA / nearB から何駅離れているか（インデックス差の絶対値）
     final int da = nearA == null ? 0 : (ai - nearA.$2).abs();
@@ -214,6 +229,8 @@ String pickSharedStation({
   }
   return best;
 }
+
+//====================================================================================
 
 /// 乗り換え経路を計算するメイン関数。
 ///
@@ -234,14 +251,14 @@ CalculatedRouteModel? routeFinder({
   // 1) JR 利用可否に応じて路線一覧をフィルタリング
   final List<TokyoTrainModel> lines = allowJR
       ? tokyoTrainModelList
-      : tokyoTrainModelList.where((TokyoTrainModel l) => !_isJRLine(lineName: l.trainName)).toList();
+      : tokyoTrainModelList.where((TokyoTrainModel l) => !checkTrainNameIncludeJR(trainName: l.trainName)).toList();
 
   // 2) インデックス構築
-  final NetworkIndex idx = NetworkIndex(lines);
+  final NetworkIndex networkIndex = NetworkIndex(lines);
 
   // 出発駅 / 到着駅 が属する (路線名, 路線内インデックス) の候補を取得
-  final Set<(String, int)> fromC = idx.candidateLinesByStation(name: origin);
-  final Set<(String, int)> toC = idx.candidateLinesByStation(name: destination);
+  final Set<(String, int)> fromC = networkIndex.candidateLinesByStation(name: origin);
+  final Set<(String, int)> toC = networkIndex.candidateLinesByStation(name: destination);
 
   // どちらかの駅が1本もヒットしなければ経路なし
   if (fromC.isEmpty || toC.isEmpty) {
@@ -255,7 +272,7 @@ CalculatedRouteModel? routeFinder({
   final Set<String> goal = toC.map(((String, int) e) => e.$1).toSet();
 
   // 3) 路線グラフ上で「最小乗り換えの路線列」を BFS で探索
-  final List<String>? linePath = bfsLines(idx: idx, start: start, goal: goal);
+  final List<String>? linePath = bfsLines(networkIndex: networkIndex, start: start, goal: goal);
   if (linePath == null) {
     return null; // どの路線の組み合わせでも目的地に届かなかった
   }
@@ -290,10 +307,15 @@ CalculatedRouteModel? routeFinder({
       final TokyoTrainModel nextL = lines.firstWhere((TokyoTrainModel l) => l.trainName == nextLine);
 
       // lineName → nextLine の間で、どの共通駅で乗り換えるかを決める
-      final String transAt = pickSharedStation(idx: idx, lineA: lineName, lineB: nextLine, nearA: cur);
+      final String transAt = pickSharedStation(
+        networkIndex: networkIndex,
+        lineA: lineName,
+        lineB: nextLine,
+        nearA: cur,
+      );
 
       // 「今の路線(lineName)上での乗換駅のインデックス」を取得
-      final int tIdxA = idx.lineToStationIndex[lineName]![stringModifier(name: transAt)]!;
+      final int tIdxA = networkIndex.lineToStationIndex[lineName]![stringModifier(name: transAt)]!;
 
       // 出発側の区間: 現在位置(cur) から 乗換駅(transAt) までの駅リスト
       final List<String> passA = sliceStations(list: line.station, a: cur!.$2, b: tIdxA);
@@ -306,7 +328,7 @@ CalculatedRouteModel? routeFinder({
       trans.add(TransferStepModel(atStation: transAt, fromLine: lineName, toLine: nextLine));
 
       // 次の路線(nextLine)上での「乗換駅のインデックス」へ位置を移動
-      final int tIdxB = idx.lineToStationIndex[nextLine]![stringModifier(name: transAt)]!;
+      final int tIdxB = networkIndex.lineToStationIndex[nextLine]![stringModifier(name: transAt)]!;
       cur = (nextLine, tIdxB);
 
       // ■ linePath の最後の路線に乗り換えた直後なら、

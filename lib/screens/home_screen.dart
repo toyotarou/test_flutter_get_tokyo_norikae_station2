@@ -16,8 +16,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  late List<TokyoTrainModel> tokyoTrainModelList;
-  late List<String> stationNamesList;
+  late List<String> forAutoCompleteStationNamesList;
 
   final TextEditingController startEditingController = TextEditingController();
   final TextEditingController goalEditingController = TextEditingController();
@@ -32,15 +31,14 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
 
-    tokyoTrainModelList = widget.tokyoTrainModelList;
-    stationNamesList = <String>{
-      for (final TokyoTrainModel tokyoTrainModel in tokyoTrainModelList)
+    forAutoCompleteStationNamesList = <String>{
+      for (final TokyoTrainModel tokyoTrainModel in widget.tokyoTrainModelList)
         ...tokyoTrainModel.station.map((TokyoStationModel tokyoStationModel) => tokyoStationModel.stationName),
     }.toList()..sort();
   }
 
   ///
-  void norikaeSearch() {
+  void doNorikaeSearch() {
     setState(() {
       error = null;
       calculateRouteModel = null;
@@ -54,7 +52,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     final CalculatedRouteModel? calculatedRouteModel = routeFinder(
-      tokyoTrainModelList: tokyoTrainModelList,
+      tokyoTrainModelList: widget.tokyoTrainModelList,
       origin: start,
       destination: goal,
       allowJR: _allowJR,
@@ -83,7 +81,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: stationNameAutoComplete(
                     label: '出発駅',
                     textEditingController: startEditingController,
-                    stationNamesList: stationNamesList,
+                    stationNamesList: forAutoCompleteStationNamesList,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -91,13 +89,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: stationNameAutoComplete(
                     label: '到着駅',
                     textEditingController: goalEditingController,
-                    stationNamesList: stationNamesList,
+                    stationNamesList: forAutoCompleteStationNamesList,
                   ),
                 ),
               ],
             ),
 
             const SizedBox(height: 8),
+
             SwitchListTile.adaptive(
               title: const Text('JRを使う'),
               value: _allowJR,
@@ -105,10 +104,13 @@ class _HomeScreenState extends State<HomeScreen> {
               subtitle: Text(_allowJR ? 'JRを経路に含めます' : 'JRを除外して検索します'),
             ),
             const SizedBox(height: 8),
-            FilledButton.icon(icon: const Icon(Icons.search), label: const Text('検索する'), onPressed: norikaeSearch),
+
+            FilledButton.icon(icon: const Icon(Icons.search), label: const Text('検索する'), onPressed: doNorikaeSearch),
             const SizedBox(height: 12),
-            if (error != null) Text(error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
-            if (calculateRouteModel != null) buildResultCard(calculateRouteModel: calculateRouteModel!),
+
+            if (error != null) ...<Widget>[Text(error!, style: TextStyle(color: Theme.of(context).colorScheme.error))],
+
+            if (calculateRouteModel != null) ...<Widget>[buildResultCard(calculateRouteModel: calculateRouteModel!)],
           ],
         ),
       ),

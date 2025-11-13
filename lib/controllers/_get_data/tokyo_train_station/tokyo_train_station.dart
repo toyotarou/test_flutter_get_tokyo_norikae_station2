@@ -45,12 +45,7 @@ class TokyoTrainStation extends _$TokyoTrainStation {
       for (final dynamic e in data) {
         final TokyoTrainModel val = TokyoTrainModel.fromJson(e as Map<String, dynamic>);
 
-        final List<TokyoStationModel> stations = <TokyoStationModel>[];
-        for (final TokyoStationModel s in val.station) {
-          stations.add(TokyoStationModel(id: s.id, stationName: s.stationName, lat: s.lat, lng: s.lng, address: ''));
-        }
-
-        list.add(TokyoTrainModel(trainNumber: val.trainNumber, trainName: val.trainName, station: stations));
+        list.add(val);
       }
 
       state = state.copyWith(tokyoTrainModelList: list, isLoading: false);
