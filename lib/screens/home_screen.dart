@@ -52,7 +52,7 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
-    final CalculatedRouteModel? r = findRoute(
+    final CalculatedRouteModel? r = routeFinder(
       allLines: tokyoTrainModelList,
       origin: from,
       destination: to,
