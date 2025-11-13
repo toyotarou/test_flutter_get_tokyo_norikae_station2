@@ -1,0 +1,44 @@
+name: test_flutter_get_tokyo_norikae_station
+description: "A new Flutter project."
+
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.8.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  http: ^1.6.0
+  intl: ^0.20.2
+
+  flutter_riverpod: ^2.5.1
+  hooks_riverpod: ^2.5.1
+  riverpod_annotation: ^2.3.5
+  freezed_annotation: ^2.4.1
+
+  flutter_localizations:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^5.0.0
+
+  build_runner: ^2.4.8
+  freezed: ^2.4.6
+  json_serializable: ^6.7.1
+  riverpod_generator: ^2.4.0
+
+  custom_lint: ^0.6.4
+  riverpod_lint: ^2.3.10
+
+flutter:
+
+  uses-material-design: true
