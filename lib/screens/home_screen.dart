@@ -1,4 +1,3 @@
-// lib/src/feature/tokyo_train_station/ui/home_screen.dart
 import 'package:flutter/material.dart';
 
 import '../models/calculated_route_model.dart';
@@ -18,7 +17,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // ← FutureBuilder はやめる
   late List<LineModel> _allLines;
   late List<String> _stationNames;
 
@@ -30,16 +28,18 @@ class _HomeScreenState extends State<HomeScreen> {
   CalculatedRouteModel? result;
   String? error;
 
+  ///
   @override
   void initState() {
     super.initState();
-    // 同期初期化：渡ってきた List をそのまま使用
+
     _allLines = widget.lineModelList;
     _stationNames = <String>{
       for (final LineModel ln in _allLines) ...ln.stations.map((StationModel s) => s.name),
     }.toList()..sort();
   }
 
+  ///
   void _search() {
     setState(() {
       error = null;
@@ -63,6 +63,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  ///
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -96,10 +97,13 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  ///
   Widget _autocomplete(String label, TextEditingController ctl, List<String> opts) {
     return Autocomplete<String>(
       optionsBuilder: (TextEditingValue t) {
-        if (t.text.isEmpty) return const Iterable<String>.empty();
+        if (t.text.isEmpty) {
+          return const Iterable<String>.empty();
+        }
         final String q = t.text.toLowerCase();
         return opts.where((String o) => o.toLowerCase().contains(q)).take(50);
       },
@@ -119,6 +123,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  ///
   Widget _buildResult(CalculatedRouteModel r) {
     return Card(
       child: Padding(

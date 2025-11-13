@@ -4,6 +4,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'controllers/controllers_mixin.dart';
+import 'models/line_model.dart';
 import 'screens/home_screen.dart';
 
 Future<void> main() async {
@@ -55,8 +56,6 @@ class _MyAppState extends ConsumerState<MyApp> with ControllersMixin<MyApp> {
   void initState() {
     super.initState();
 
-    // ★ 重要ポイント：
-    //   ProviderScope のビルドが完了した「次のフレーム」で API を叩くようにする
     WidgetsBinding.instance.addPostFrameCallback((_) {
       tokyoTrainStationNotifier.getAllTokyoTrainStation();
     });
@@ -65,15 +64,12 @@ class _MyAppState extends ConsumerState<MyApp> with ControllersMixin<MyApp> {
   ///
   @override
   Widget build(BuildContext context) {
-    // ControllersMixin 経由で Riverpod の state を参照
-    final lineModelList = tokyoTrainStationState.lineModelList;
+    final List<LineModel> lineModelList = tokyoTrainStationState.lineModelList;
 
-    // データがまだ空の間はローディング表示にする
     Widget homeBody;
     if (lineModelList.isEmpty) {
       homeBody = const Center(child: CircularProgressIndicator());
     } else {
-      // データが入ったら HomeScreen に List<LineModel> を渡す
       homeBody = HomeScreen(lineModelList: lineModelList);
     }
 
@@ -97,7 +93,7 @@ class _MyAppState extends ConsumerState<MyApp> with ControllersMixin<MyApp> {
       ),
 
       themeMode: ThemeMode.dark,
-      title: 'LIFETIME LOG',
+      title: 'NORIKAE',
       debugShowCheckedModeBanner: false,
       home: GestureDetector(onTap: () => primaryFocus?.unfocus(), child: homeBody),
     );
