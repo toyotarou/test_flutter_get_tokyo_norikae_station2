@@ -1,7 +1,6 @@
 import '../models/calculated_route_model.dart';
-import '../models/line_model.dart';
 import '../models/route_segment_model.dart';
-import '../models/station_model.dart';
+import '../models/tokyo_train_model.dart';
 import '../models/transfer_step_model.dart';
 
 /// 駅名などの文字列を正規化する関数。
@@ -34,30 +33,30 @@ bool _isJRLine(String lineName) {
 class NetworkIndex {
   NetworkIndex(this.lines) {
     // 1) 各路線ごとに、駅のインデックス情報を構築
-    for (final LineModel line in lines) {
+    for (final TokyoTrainModel line in lines) {
       final Map<String, int> idxMap = <String, int>{};
 
-      for (int i = 0; i < line.stations.length; i++) {
-        final String norm = _norm(line.stations[i].name);
+      for (int i = 0; i < line.station.length; i++) {
+        final String norm = _norm(line.station[i].stationName);
 
         // 路線内インデックスを保存
         idxMap[norm] = i;
 
         // 駅名(正規化) → (路線名, インデックス) のセットを構築
-        stationToLineAndIdx.putIfAbsent(norm, () => <(String, int)>{}).add((line.name, i));
+        stationToLineAndIdx.putIfAbsent(norm, () => <(String, int)>{}).add((line.trainName, i));
       }
 
       // 路線名 → (駅名(正規化) → インデックス) のマップを保存
-      lineToStationIndex[line.name] = idxMap;
+      lineToStationIndex[line.trainName] = idxMap;
     }
 
     // 2) 路線同士の「乗り換え可能関係」のグラフを構築
     //    ＝ 共通駅を持つ路線同士を隣接とみなし、その共通駅名の集合を持たせる
-    for (final LineModel a in lines) {
+    for (final TokyoTrainModel a in lines) {
       // 路線aに含まれる駅名(正規化)のセット
-      final Set<String> aSet = a.stations.map((StationModel s) => _norm(s.name)).toSet();
+      final Set<String> aSet = a.station.map((TokyoStationModel s) => _norm(s.stationName)).toSet();
 
-      for (final LineModel b in lines) {
+      for (final TokyoTrainModel b in lines) {
         if (identical(a, b)) {
           continue; // 同一路線同士はスキップ
         }
@@ -66,23 +65,23 @@ class NetworkIndex {
 
         // 路線bの各駅が路線aにも存在するかどうかチェックし、
         // 共通している駅名を shared に追加
-        for (final StationModel st in b.stations) {
-          if (aSet.contains(_norm(st.name))) {
-            shared.add(st.name);
+        for (final TokyoStationModel st in b.station) {
+          if (aSet.contains(_norm(st.stationName))) {
+            shared.add(st.stationName);
           }
         }
 
         // 共通駅が1つでもあれば「乗り換え可能な路線同士」として lineGraph に登録
         if (shared.isNotEmpty) {
-          lineGraph.putIfAbsent(a.name, () => <String, Set<String>>{});
-          lineGraph[a.name]![b.name] = shared;
+          lineGraph.putIfAbsent(a.trainName, () => <String, Set<String>>{});
+          lineGraph[a.trainName]![b.trainName] = shared;
         }
       }
     }
   }
 
   /// このインデックスが対象としている路線一覧
-  final List<LineModel> lines;
+  final List<TokyoTrainModel> lines;
 
   /// 駅名(正規化) → その駅が存在する (路線名, 路線内インデックス) のセット
   /// 例: "四ツ谷" → { ("JR中央線", 5), ("東京メトロ丸ノ内線", 3), ... }
@@ -167,11 +166,11 @@ List<String>? _bfsLines(NetworkIndex idx, Set<String> start, Set<String> goal) {
 ///
 /// - a <= b の場合 : [a, a+1, ..., b]
 /// - a >  b の場合 : [a, a-1, ..., b]（駅の順も反転して返す）
-List<String> _sliceStations(List<StationModel> list, int a, int b) {
+List<String> _sliceStations(List<TokyoStationModel> list, int a, int b) {
   if (a <= b) {
-    return list.sublist(a, b + 1).map((StationModel s) => s.name).toList();
+    return list.sublist(a, b + 1).map((TokyoStationModel s) => s.stationName).toList();
   }
-  return list.sublist(b, a + 1).reversed.map((StationModel s) => s.name).toList();
+  return list.sublist(b, a + 1).reversed.map((TokyoStationModel s) => s.stationName).toList();
 }
 
 /// 2つの路線 lineA / lineB の間で「共通駅」が複数あるときに、
@@ -219,13 +218,15 @@ String _pickSharedStation(NetworkIndex idx, String lineA, String lineB, (String,
 /// - 見つかった場合 : CalculatedRouteModel（経路全体＋乗り換え情報）
 /// - 見つからない場合: null
 CalculatedRouteModel? findRoute({
-  required List<LineModel> allLines,
+  required List<TokyoTrainModel> allLines,
   required String origin,
   required String destination,
   required bool allowJR,
 }) {
   // 1) JR 利用可否に応じて路線一覧をフィルタリング
-  final List<LineModel> lines = allowJR ? allLines : allLines.where((LineModel l) => !_isJRLine(l.name)).toList();
+  final List<TokyoTrainModel> lines = allowJR
+      ? allLines
+      : allLines.where((TokyoTrainModel l) => !_isJRLine(l.trainName)).toList();
 
   // 2) インデックス構築
   final NetworkIndex idx = NetworkIndex(lines);
@@ -260,7 +261,7 @@ CalculatedRouteModel? findRoute({
 
   for (int i = 0; i < linePath.length; i++) {
     final String lineName = linePath[i];
-    final LineModel line = lines.firstWhere((LineModel l) => l.name == lineName);
+    final TokyoTrainModel line = lines.firstWhere((TokyoTrainModel l) => l.trainName == lineName);
 
     // ■ ケース1: 乗り換えなしで完結する場合（linePathが1本だけ）
     if (i == 0 && linePath.length == 1) {
@@ -269,7 +270,7 @@ CalculatedRouteModel? findRoute({
         ..sort();
 
       // 出発駅から到着駅までの駅リストを切り出す
-      final List<String> pass = _sliceStations(line.stations, cur!.$2, destIdx.first);
+      final List<String> pass = _sliceStations(line.station, cur!.$2, destIdx.first);
 
       seg.add(RouteSegmentModel(lineName: lineName, fromStation: pass.first, toStation: pass.last, passStations: pass));
       break;
@@ -278,7 +279,7 @@ CalculatedRouteModel? findRoute({
     // ■ ケース2: まだ次の路線がある（＝この路線からどこかで乗り換える必要がある）
     if (i < linePath.length - 1) {
       final String nextLine = linePath[i + 1];
-      final LineModel nextL = lines.firstWhere((LineModel l) => l.name == nextLine);
+      final TokyoTrainModel nextL = lines.firstWhere((TokyoTrainModel l) => l.trainName == nextLine);
 
       // lineName → nextLine の間で、どの共通駅で乗り換えるかを決める
       final String transAt = _pickSharedStation(idx, lineName, nextLine, cur, null);
@@ -287,7 +288,7 @@ CalculatedRouteModel? findRoute({
       final int tIdxA = idx.lineToStationIndex[lineName]![_norm(transAt)]!;
 
       // 出発側の区間: 現在位置(cur) から 乗換駅(transAt) までの駅リスト
-      final List<String> passA = _sliceStations(line.stations, cur!.$2, tIdxA);
+      final List<String> passA = _sliceStations(line.station, cur!.$2, tIdxA);
 
       seg.add(
         RouteSegmentModel(lineName: lineName, fromStation: passA.first, toStation: passA.last, passStations: passA),
@@ -307,7 +308,7 @@ CalculatedRouteModel? findRoute({
             toC.where(((String, int) e) => e.$1 == nextLine).map(((String, int) e) => e.$2).toList()..sort();
 
         // 乗換駅から到着駅までの駅リスト
-        final List<String> passB = _sliceStations(nextL.stations, cur.$2, destIdx.first);
+        final List<String> passB = _sliceStations(nextL.station, cur.$2, destIdx.first);
 
         seg.add(
           RouteSegmentModel(lineName: nextLine, fromStation: passB.first, toStation: passB.last, passStations: passB),

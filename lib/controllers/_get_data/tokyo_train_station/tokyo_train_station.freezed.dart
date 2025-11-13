@@ -16,7 +16,8 @@ final _privateConstructorUsedError = UnsupportedError(
 
 /// @nodoc
 mixin _$TokyoTrainStationState {
-  List<LineModel> get lineModelList => throw _privateConstructorUsedError;
+  List<TokyoTrainModel> get tokyoTrainModelList =>
+      throw _privateConstructorUsedError;
   bool get isLoading => throw _privateConstructorUsedError;
   String? get errorMessage => throw _privateConstructorUsedError;
 
@@ -34,7 +35,9 @@ abstract class $TokyoTrainStationStateCopyWith<$Res> {
       _$TokyoTrainStationStateCopyWithImpl<$Res, TokyoTrainStationState>;
   @useResult
   $Res call(
-      {List<LineModel> lineModelList, bool isLoading, String? errorMessage});
+      {List<TokyoTrainModel> tokyoTrainModelList,
+      bool isLoading,
+      String? errorMessage});
 }
 
 /// @nodoc
@@ -53,15 +56,15 @@ class _$TokyoTrainStationStateCopyWithImpl<$Res,
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? lineModelList = null,
+    Object? tokyoTrainModelList = null,
     Object? isLoading = null,
     Object? errorMessage = freezed,
   }) {
     return _then(_value.copyWith(
-      lineModelList: null == lineModelList
-          ? _value.lineModelList
-          : lineModelList // ignore: cast_nullable_to_non_nullable
-              as List<LineModel>,
+      tokyoTrainModelList: null == tokyoTrainModelList
+          ? _value.tokyoTrainModelList
+          : tokyoTrainModelList // ignore: cast_nullable_to_non_nullable
+              as List<TokyoTrainModel>,
       isLoading: null == isLoading
           ? _value.isLoading
           : isLoading // ignore: cast_nullable_to_non_nullable
@@ -84,7 +87,9 @@ abstract class _$$TokyoTrainStationStateImplCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {List<LineModel> lineModelList, bool isLoading, String? errorMessage});
+      {List<TokyoTrainModel> tokyoTrainModelList,
+      bool isLoading,
+      String? errorMessage});
 }
 
 /// @nodoc
@@ -102,15 +107,15 @@ class __$$TokyoTrainStationStateImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? lineModelList = null,
+    Object? tokyoTrainModelList = null,
     Object? isLoading = null,
     Object? errorMessage = freezed,
   }) {
     return _then(_$TokyoTrainStationStateImpl(
-      lineModelList: null == lineModelList
-          ? _value._lineModelList
-          : lineModelList // ignore: cast_nullable_to_non_nullable
-              as List<LineModel>,
+      tokyoTrainModelList: null == tokyoTrainModelList
+          ? _value._tokyoTrainModelList
+          : tokyoTrainModelList // ignore: cast_nullable_to_non_nullable
+              as List<TokyoTrainModel>,
       isLoading: null == isLoading
           ? _value.isLoading
           : isLoading // ignore: cast_nullable_to_non_nullable
@@ -127,18 +132,20 @@ class __$$TokyoTrainStationStateImplCopyWithImpl<$Res>
 
 class _$TokyoTrainStationStateImpl implements _TokyoTrainStationState {
   const _$TokyoTrainStationStateImpl(
-      {final List<LineModel> lineModelList = const <LineModel>[],
+      {final List<TokyoTrainModel> tokyoTrainModelList =
+          const <TokyoTrainModel>[],
       this.isLoading = false,
       this.errorMessage})
-      : _lineModelList = lineModelList;
+      : _tokyoTrainModelList = tokyoTrainModelList;
 
-  final List<LineModel> _lineModelList;
+  final List<TokyoTrainModel> _tokyoTrainModelList;
   @override
   @JsonKey()
-  List<LineModel> get lineModelList {
-    if (_lineModelList is EqualUnmodifiableListView) return _lineModelList;
+  List<TokyoTrainModel> get tokyoTrainModelList {
+    if (_tokyoTrainModelList is EqualUnmodifiableListView)
+      return _tokyoTrainModelList;
     // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(_lineModelList);
+    return EqualUnmodifiableListView(_tokyoTrainModelList);
   }
 
   @override
@@ -149,7 +156,7 @@ class _$TokyoTrainStationStateImpl implements _TokyoTrainStationState {
 
   @override
   String toString() {
-    return 'TokyoTrainStationState(lineModelList: $lineModelList, isLoading: $isLoading, errorMessage: $errorMessage)';
+    return 'TokyoTrainStationState(tokyoTrainModelList: $tokyoTrainModelList, isLoading: $isLoading, errorMessage: $errorMessage)';
   }
 
   @override
@@ -158,7 +165,7 @@ class _$TokyoTrainStationStateImpl implements _TokyoTrainStationState {
         (other.runtimeType == runtimeType &&
             other is _$TokyoTrainStationStateImpl &&
             const DeepCollectionEquality()
-                .equals(other._lineModelList, _lineModelList) &&
+                .equals(other._tokyoTrainModelList, _tokyoTrainModelList) &&
             (identical(other.isLoading, isLoading) ||
                 other.isLoading == isLoading) &&
             (identical(other.errorMessage, errorMessage) ||
@@ -168,7 +175,7 @@ class _$TokyoTrainStationStateImpl implements _TokyoTrainStationState {
   @override
   int get hashCode => Object.hash(
       runtimeType,
-      const DeepCollectionEquality().hash(_lineModelList),
+      const DeepCollectionEquality().hash(_tokyoTrainModelList),
       isLoading,
       errorMessage);
 
@@ -184,12 +191,12 @@ class _$TokyoTrainStationStateImpl implements _TokyoTrainStationState {
 
 abstract class _TokyoTrainStationState implements TokyoTrainStationState {
   const factory _TokyoTrainStationState(
-      {final List<LineModel> lineModelList,
+      {final List<TokyoTrainModel> tokyoTrainModelList,
       final bool isLoading,
       final String? errorMessage}) = _$TokyoTrainStationStateImpl;
 
   @override
-  List<LineModel> get lineModelList;
+  List<TokyoTrainModel> get tokyoTrainModelList;
   @override
   bool get isLoading;
   @override

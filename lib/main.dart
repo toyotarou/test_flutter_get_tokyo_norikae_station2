@@ -4,7 +4,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'controllers/controllers_mixin.dart';
-import 'models/line_model.dart';
+import 'models/tokyo_train_model.dart';
 import 'screens/home_screen.dart';
 
 Future<void> main() async {
@@ -64,13 +64,13 @@ class _MyAppState extends ConsumerState<MyApp> with ControllersMixin<MyApp> {
   ///
   @override
   Widget build(BuildContext context) {
-    final List<LineModel> lineModelList = tokyoTrainStationState.lineModelList;
+    final List<TokyoTrainModel> tokyoTrainModelList = tokyoTrainStationState.tokyoTrainModelList;
 
     Widget homeBody;
-    if (lineModelList.isEmpty) {
+    if (tokyoTrainModelList.isEmpty) {
       homeBody = const Center(child: CircularProgressIndicator());
     } else {
-      homeBody = HomeScreen(lineModelList: lineModelList);
+      homeBody = HomeScreen(tokyoTrainModelList: tokyoTrainModelList);
     }
 
     return MaterialApp(

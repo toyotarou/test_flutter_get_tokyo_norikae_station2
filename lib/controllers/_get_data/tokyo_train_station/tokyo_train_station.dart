@@ -2,8 +2,6 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../data/http/client.dart';
-import '../../../models/line_model.dart';
-import '../../../models/station_model.dart';
 import '../../../models/tokyo_train_model.dart';
 import '../../../utility/utility.dart';
 
@@ -14,7 +12,7 @@ part 'tokyo_train_station.g.dart';
 @freezed
 class TokyoTrainStationState with _$TokyoTrainStationState {
   const factory TokyoTrainStationState({
-    @Default(<LineModel>[]) List<LineModel> lineModelList,
+    @Default(<TokyoTrainModel>[]) List<TokyoTrainModel> tokyoTrainModelList,
     @Default(false) bool isLoading,
     String? errorMessage,
   }) = _TokyoTrainStationState;
@@ -34,7 +32,7 @@ class TokyoTrainStation extends _$TokyoTrainStation {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
     try {
-      final List<LineModel> list = <LineModel>[];
+      final List<TokyoTrainModel> list = <TokyoTrainModel>[];
 
       final dynamic value = await client.postByPath(
         path: 'http://toyohide.work/BrainLog/api/getTokyoTrainStation',
@@ -47,15 +45,15 @@ class TokyoTrainStation extends _$TokyoTrainStation {
       for (final dynamic e in data) {
         final TokyoTrainModel val = TokyoTrainModel.fromJson(e as Map<String, dynamic>);
 
-        final List<StationModel> stations = <StationModel>[];
+        final List<TokyoStationModel> stations = <TokyoStationModel>[];
         for (final TokyoStationModel s in val.station) {
-          stations.add(StationModel(id: s.id, name: s.stationName, lat: s.lat, lng: s.lng));
+          stations.add(TokyoStationModel(id: s.id, stationName: s.stationName, lat: s.lat, lng: s.lng, address: ''));
         }
 
-        list.add(LineModel(trainNumber: val.trainNumber, name: val.trainName, stations: stations));
+        list.add(TokyoTrainModel(trainNumber: val.trainNumber, trainName: val.trainName, station: stations));
       }
 
-      state = state.copyWith(lineModelList: list, isLoading: false);
+      state = state.copyWith(tokyoTrainModelList: list, isLoading: false);
     } catch (e) {
       utility.showError('予期せぬエラーが発生しました');
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
