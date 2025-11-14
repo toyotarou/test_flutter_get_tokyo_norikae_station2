@@ -25,6 +25,25 @@ dependencies:
   flutter_localizations:
     sdk: flutter
 
+  scroll_to_index: ^3.0.1
+  scrollable_positioned_list: ^0.3.8
+
+  flutter_launcher_icons: ^0.14.3
+  flutter_native_splash: ^2.3.8
+
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
+
+  font_awesome_flutter: ^10.7.0
+
+  flutter_cache_manager: ^3.4.1
+
+  fl_chart: ^0.69.0
+  dotted_line: ^3.2.3
+  cached_network_image: ^3.4.1
+
+  flutter_dotenv: ^5.2.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -42,3 +61,18 @@ dev_dependencies:
 flutter:
 
   uses-material-design: true
+
+  assets:
+    - assets/images/
+
+flutter_native_splash:
+  image: "assets/images/ic_launcher.png"
+  color: "00808d"
+
+flutter_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/ic_launcher.png"
+
+  adaptive_icon_background: "#00808d"
+  adaptive_icon_foreground: "assets/images/ic_launcher.png"

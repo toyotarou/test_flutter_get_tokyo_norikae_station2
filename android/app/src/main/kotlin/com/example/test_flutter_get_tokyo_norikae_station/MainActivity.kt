@@ -1,4 +1,4 @@
-package com.example.test_flutter_get_tokyo_norikae_station
+package com.example.flutter_norikae_app
 
 import io.flutter.embedding.android.FlutterActivity
 

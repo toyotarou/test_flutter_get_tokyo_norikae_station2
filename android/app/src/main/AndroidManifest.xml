@@ -3,9 +3,9 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
-        android:label="test_flutter_get_tokyo_norikae_station"
+        android:label="flutter_norikae_app"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/launcher_icon">
         <activity
             android:name=".MainActivity"
             android:exported="true"

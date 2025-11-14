@@ -6,9 +6,9 @@ plugins {
 }
 
 android {
-    namespace = "com.example.test_flutter_get_tokyo_norikae_station"
+    namespace = "com.example.flutter_norikae_app"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = "27.0.12077973"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
